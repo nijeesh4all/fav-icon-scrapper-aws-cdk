@@ -2,7 +2,7 @@
 import { Context, S3CreateEvent, S3EventRecord } from 'aws-lambda';
 import { S3, SQS } from 'aws-sdk'
 
-import * as readline from 'readline'
+import { Transform } from 'stream'
 
 const s3 = new S3({
     region: process.env.AWS_REGION
@@ -16,9 +16,9 @@ export const lambdaHandler = async (event: S3CreateEvent, context: Context) => {
     console.log(`Event: ${JSON.stringify(event, null, 2)}`);
     console.log(`Context: ${JSON.stringify(context, null, 2)}`);
 
-    if(!process.env.SQS_DESTINATION_URL){
+    if (!process.env.SQS_DESTINATION_URL) {
         throw new Error("SNS_DESTINATION is not set");
-        
+
     }
 
     for (const record of event.Records) {
@@ -37,13 +37,26 @@ const processRecord = async (record: S3EventRecord) => {
 
     console.log(object_params);
 
-    const line_reader = readline.createInterface({
-        input: s3.getObject(object_params).createReadStream(),
-        terminal: false
-    })
+    const s3_object_stream = s3.getObject(object_params).createReadStream()
+
+    const liner = new Transform({
+        transform: async (chunk, encoding, callback) => {
+            const lines = chunk.toString().split('\n');
+
+            for (const line of lines) {
+                await pushToSQS(line)
+            }
+
+            callback();
+        }
+    });
+
 
     try {
-        await readLineStream(line_reader)
+        // Wait for the liner stream to complete
+        await new Promise((resolve, reject) => {
+            s3_object_stream.pipe(liner).on('error', reject).on('finish', resolve);
+        });
     }
     catch (err) {
         console.error(err);
@@ -51,22 +64,12 @@ const processRecord = async (record: S3EventRecord) => {
 
 }
 
-
-const readLineStream = async (line_reader: readline.Interface) => {
-    return new Promise((resolve, reject) => {
-        line_reader
-            .on('line', pushToSQS)
-            .on('close', resolve)
-            .on('error', reject)
-    })
-}
-
-const pushToSQS = async (line: string)=>{
-    if(!line){
+const pushToSQS = async (line: string) => {
+    if (!line) {
         return
     }
-    
-    const queue_url:string = process.env.SQS_DESTINATION_URL || ''
+
+    const queue_url: string = process.env.SQS_DESTINATION_URL || ''
 
     await sqs.sendMessage({
         MessageBody: line,
