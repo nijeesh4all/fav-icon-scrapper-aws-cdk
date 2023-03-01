@@ -2,9 +2,9 @@
 This repository contains code for a serverless Fav Icon Scraper implemented using AWS CDK and TypeScript.
 
 ## Overview
-The Fav Icon Scraper is a serverless stack that extracts favicon URLs from a list of websites and saves them to an S3 bucket. It uses AWS Lambda, Amazon S3, and Amazon SQS as part of the stack. 
-
-The extire stack is built using The AWS Cloud Development Kit (CDK) on typescript
+This project consists of an AWS CDK stack that sets up an S3 bucket, an SQS queue, and two Lambda functions to scrape and download favicons from URLs.
+The first Lambda function, `list_parser`, is triggered when a new `.txt` file is uploaded to the S3 bucket. It reads the file and creates SQS messages for each URL found in the file.
+The second Lambda function, `scrapper`, is triggered by messages in the SQS queue created by list_parser. It scrapes the favicons from the URLs in the messages and saves them to the S3 bucket.
 
 ## Architecture
 The architecture of the Fav Icon Scraper is as follows:
