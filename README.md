@@ -42,10 +42,10 @@ aws configure.
 Deploy the application to AWS by running `cdk deploy`.
 
 ## Usage
-To use the Fav Icon Scraper, follow these steps:
-
-Upload a text file containing a list of website URLs to the S3 bucket you specified in the `fav-icon-scraper-stack.ts` file.
-If everything worked, you will be able to see icons from the urls you provided
+- Create a file containing a list of URLs, one URL per line.
+- Upload the file to the S3 bucket created during the deployment.
+- Wait for a few minutes for the Lambda functions to download the favicon images from the URLs and save them to the S3 bucket.
+- Check the icons directory in the S3 bucket to find the downloaded images.
 
 ## Clean up
 Run `cdk destroy` to remove the AWS CDK stack and all associated resources.
