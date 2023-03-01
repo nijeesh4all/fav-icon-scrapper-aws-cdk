@@ -7,6 +7,7 @@ import * as sqs from 'aws-cdk-lib/aws-sqs'
 import { S3EventSource, SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources'
 
 const LAMBDA_CONCURRENCY = 8
+const DEFAULT_BATCH_SIZE = 20
 
 export class FavIconStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -15,6 +16,7 @@ export class FavIconStack extends cdk.Stack {
 
     // parse file and push each url to sqs
     const s3_bucket = new s3.Bucket(this, 'fave-icons-bucket', {})
+    
     const queue = new sqs.Queue(this, 'url_sns_queue',{
       visibilityTimeout: cdk.Duration.minutes(10)
     })
@@ -57,7 +59,11 @@ export class FavIconStack extends cdk.Stack {
     queue.grantConsumeMessages(scrapper_lambda) 
     
     scrapper_lambda.addEventSource(
-      new SqsEventSource(queue)
+      new SqsEventSource(queue, {
+        batchSize: DEFAULT_BATCH_SIZE,
+        maxConcurrency: LAMBDA_CONCURRENCY,
+        maxBatchingWindow: cdk.Duration.minutes(2)
+      })
     )
 
     s3_bucket.grantWrite(scrapper_lambda)

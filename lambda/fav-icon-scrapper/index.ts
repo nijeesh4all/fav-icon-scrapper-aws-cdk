@@ -46,8 +46,6 @@ const processDownload = async (web_url: string) => {
     console.log({ parsed_url, fav_icon_url, s3_object_key });
 
 
-    console.log('-----0');
-
     let fetch_request;
     try {
         fetch_request = await fetch(fav_icon_url)
@@ -56,17 +54,13 @@ const processDownload = async (web_url: string) => {
         return
     }
 
-    console.log('-----1');
-
     if (!fetch_request.ok) {
         console.error(`could not fetch logo for url ${parsed_url}`)
         return
     }
 
-    console.log('-----2');
 
     try {
-        console.log('-----5');
         await s3.upload({
             Bucket: process.env.OUTPUT_BUCKET_NAME || '' ,
             Key: s3_object_key,
