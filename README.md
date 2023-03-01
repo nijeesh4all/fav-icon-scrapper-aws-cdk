@@ -9,6 +9,9 @@ The second Lambda function, `scrapper`, is triggered by messages in the SQS queu
 ## Architecture
 The architecture of the Fav Icon Scraper is as follows:
 
+![Untitled (5)](https://user-images.githubusercontent.com/14291254/222208403-3ab94855-a35d-4b32-8553-b5160ca37661.jpg)
+
+
 1. A text file containing a list of website URLs is uploaded to the Amazon S3 bucket.
 2. The file upload triggers an S3 Put event, which invokes a Lambda function called list_parser.
 3. The `list_parser` Lambda function reads the file from S3 and adds the URLs to an SQS queue named `url_sns_queue` 
